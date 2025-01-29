@@ -25,7 +25,7 @@ public class Recoder {
         if (endTimeFilePath.toFile().isFile()) {
             return Files.readString(endTimeFilePath);
         } else {
-            return null;
+            return "";
         }
     }
     private String readDidsF() throws IOException {
@@ -33,7 +33,7 @@ public class Recoder {
         if (didsFilePath.toFile().isFile()) {
             return Files.readString(didsFilePath);
         } else {
-            return null;
+            return "";
         }
     }
     private void writeEndYMDF(String string) throws IOException {
@@ -50,12 +50,7 @@ public class Recoder {
     }
     private ArrayList<ArrayList<String[]>> getFormatedDidsS() throws IOException {
         ArrayList<ArrayList<String[]>> recordsS = new ArrayList<>();
-        String readedRecords = readDidsF();
-        if (readedRecords == null){
-            return null;
-        }
-        String[] allRecordSplitDay = readedRecords.split("\n\n");
-        for(String records : allRecordSplitDay){
+        for(String records : readDidsF().split("\n\n")){
             recordsS.add(new ArrayList<>());
             for(String record : records.split("\n")){
                 if (record.split(",").length != 5){
@@ -107,7 +102,7 @@ public class Recoder {
                 LocalDateTime nowTime = LocalDateTime.now();
                 DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd");
                 String dataOfAdd = nowTime.atZone(ZoneId.systemDefault()).toEpochSecond() + "," + this.userId + "," + when + "," + comeOrGoUnixTime + "," + content;
-                if (!Objects.equals(this.readEndYMDF(), nowTime.format(timeFormat))) {
+                if (!(Objects.equals(this.readEndYMDF(), nowTime.format(timeFormat)) || this.readDidsF().isEmpty())) {
                     dataOfAdd = "\n" + dataOfAdd;
                 }
                 this.appendDidsF(dataOfAdd);

@@ -8,7 +8,7 @@ import java.nio.file.Files;
 
 @SpringBootApplication
 public class DidRecorderApplication {
-
+	public final static MyProperties properties = new MyProperties();
 	public static void main(String[] args) {
 		File recordsDirFile = new File("records");
 		try {
@@ -18,7 +18,10 @@ public class DidRecorderApplication {
 			if (!recordsDirFile.isDirectory()) {
 				Files.createDirectory(recordsDirFile.toPath());
 			}
-		} catch (Exception ignore) {}
+			properties.loadAndSetDefaultProperty();
+		} catch (Exception ignore) {
+			return;
+		}
 		SpringApplication.run(DidRecorderApplication.class, args);
 	}
 

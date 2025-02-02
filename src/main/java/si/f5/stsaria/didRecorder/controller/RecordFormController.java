@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import si.f5.stsaria.didRecorder.DidRecorderApplication;
 import si.f5.stsaria.didRecorder.Recorder;
 import si.f5.stsaria.didRecorder.TimeUtils;
 import si.f5.stsaria.didRecorder.Users;
@@ -44,6 +45,8 @@ public class RecordFormController {
             result = "-1";
         }
         mav.setViewName("index");
+        mav.addObject("minTime", DidRecorderApplication.properties.getPropertyInt("minTimeHours")+":00");
+        mav.addObject("maxTime", DidRecorderApplication.properties.getPropertyInt("maxTimeHours")+":00");
         mav.addObject("result", Integer.valueOf(result));
         mav.addObject("when", when);
         mav.addObject("log", log);

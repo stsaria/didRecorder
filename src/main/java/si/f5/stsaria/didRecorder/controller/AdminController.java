@@ -99,8 +99,7 @@ public class AdminController {
             }
         } catch (Exception ignore){}
         mav.addObject("didsS", didsS);
-        mav.addObject("attendeesDidsDownloadURL", "download/today/attendees/csv?gap="+gap);
-        mav.addObject("allDidsDownloadURL", "download/today/all/csv?gap="+gap);
+        mav.addObject("gap", gap);
         return mav;
     }
     @RequestMapping(path = "/admin/download/today/all/csv", method= RequestMethod.GET)

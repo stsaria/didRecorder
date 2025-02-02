@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 
@@ -17,14 +16,14 @@ public class Recorder {
         this.userId = userId;
         this.nowTime = TimeUtils.getNowLocalDateTime();
         this.nowUnixTime = TimeUtils.getNowUnixTime();
-        this.nowYMDTime = TimeUtils.getNowYMDTime();
+        this.nowYMDTime = TimeUtils.unixTimeToYMD(this.nowUnixTime, "Asia/Tokyo");
     }
     public int canAdd(String when, String content) throws IOException {
         if (!when.matches("[0123]")) return 1;
-        else if (content.getBytes().length > 512) return 2;
-        else if (content.split("\n").length > 5) return 3;
-        else if (this.nowTime.getHour() < 10) return 4;
-        else if (this.nowTime.getHour() > 18) return 5;
+        else if (content.getBytes().length > DidRecorderApplication.properties.getPropertyInt("maxRecordContentByteSize")) return 2;
+        else if (content.split("\n").length > DidRecorderApplication.properties.getPropertyInt("maxRecordLines")) return 3;
+        else if (this.nowTime.getHour() < DidRecorderApplication.properties.getPropertyInt("minTimeHours")) return 4;
+        else if (this.nowTime.getHour() > DidRecorderApplication.properties.getPropertyInt("maxTimeHours")) return 5;
         int findCount = 0;
         for (String[] record : Objects.requireNonNull(Recorders.getLastUpdateDayFormatedDids(0))){
             if (Objects.equals(record[1], this.userId)){
@@ -38,7 +37,7 @@ public class Recorder {
                 if (!Objects.equals(Recorders.readEndYMDF(), this.nowYMDTime)) {
                     return 0;
                 }
-                if (Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) > 54000){
+                if (Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) > DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")){
                     return 0;
                 }
             }
@@ -51,7 +50,7 @@ public class Recorder {
             return "0";
         }
         for (String[] record : Objects.requireNonNull(Recorders.getLastUpdateDayFormatedDids(0))){
-            if (Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) < 54000 &&
+            if (Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) < DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds") &&
                 Objects.equals(record[1], this.userId))
             {
                 when = Integer.parseInt(record[2]);
@@ -78,16 +77,17 @@ public class Recorder {
         }
     }
     public String getLatestLog(int gap) throws IOException {
-        DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm");
         StringBuilder log = new StringBuilder();
         for (String[] record : Objects.requireNonNull(Recorders.getLastUpdateDayFormatedDids(gap))){
-            if (!(Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) < 54000)){
+            if (!(Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) < (gap == 0 ?
+                    DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")
+                : DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")*(long) gap))){
                 break;
             } else if (!Objects.equals(record[1], this.userId)){
                 continue;
             }
             log
-                .append(timeFormat.format(TimeUtils.unixTimeToLocalDateTime(Long.parseLong(record[0]), "Asia/Tokyo")))
+                .append(TimeUtils.unixTimeToHM(Long.parseLong(record[0]), "Asia/Tokyo"))
                 .append("\n")
                 .append(StringUtils.replaceEach(
                         record[2],
@@ -97,7 +97,7 @@ public class Recorder {
                 )
                 .append("\n内容:")
                 .append(record[2].matches("[03]")
-                    ? timeFormat.format(TimeUtils.unixTimeToLocalDateTime(Long.parseLong(record[3]), "Asia/Tokyo"))
+                    ? TimeUtils.unixTimeToHM(Long.parseLong(record[3]), "Asia/Tokyo")
                     : record[3]
                 )
                 .append("\n\n");

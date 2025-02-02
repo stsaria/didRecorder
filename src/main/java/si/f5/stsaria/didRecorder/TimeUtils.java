@@ -10,15 +10,22 @@ public class TimeUtils {
     public static long getNowUnixTime(){
         return TimeUtils.getNowLocalDateTime().atZone(ZoneId.systemDefault()).toEpochSecond();
     }
-    public static String getNowYMDTime(){
-        return TimeUtils.getNowLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-    }
     public static LocalDateTime unixTimeToLocalDateTime(long time, String zoneId){
         return LocalDateTime.ofInstant(Instant.ofEpochSecond(time), ZoneId.systemDefault())
                 .atZone(ZoneId.of(zoneId)).toLocalDateTime();
     }
+    private static String unixTimeToFormat(long time, String format, String zoneId){
+        return DateTimeFormatter.ofPattern(format)
+                .format(unixTimeToLocalDateTime(time, zoneId));
+    }
     public static String unixTimeToHM(long time, String zoneId){
-        return DateTimeFormatter.ofPattern("HH:mm").format(TimeUtils.unixTimeToLocalDateTime(time, zoneId));
+        return unixTimeToFormat(time, "HH:mm", zoneId);
+    }
+    public static String unixTimeToYMD(long time, String zoneId){
+        return unixTimeToFormat(time, "yyyy/MM/dd", zoneId);
+    }
+    public static String unixTimeToYMDHM(long time, String zoneId){
+        return unixTimeToFormat(time, "yyyy/MM/dd - HH:mm", zoneId);
     }
     public static long hMTimeToUnixTime(String time){
         return LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"))

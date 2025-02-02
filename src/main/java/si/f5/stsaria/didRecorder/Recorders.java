@@ -71,13 +71,15 @@ public class Recorders {
         ArrayList<String> foundUserIds = new ArrayList<>();
         synchronized (Users.lock) {
             for (String[] record : dids) {
-                if (!(Math.abs(Integer.parseInt(record[0]) - TimeUtils.getNowUnixTime()) < (gap == 0 ? 54000 : 54000L *gap))) {
+                /* if (!(Math.abs(Integer.parseInt(record[0]) - TimeUtils.getNowUnixTime()) < ((gap == 0 ?
+                        DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")
+                        : DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")*(long) gap))*(Math.abs(Integer.parseInt(Recorders.readEndYMDF().split("/")[2]) - Integer.parseInt(TimeUtils.unixTimeToD(TimeUtils.getNowUnixTime(), "Asia/Tokyo")))+1))){
                     break;
-                }
+                } */
                 switch (type) {
                     case 0:
                         log
-                            .append(TimeUtils.unixTimeToHM(Long.parseLong(record[0]), "Asia/Tokyo"))
+                            .append(TimeUtils.unixTimeToYMDHM(Long.parseLong(record[0]), "Asia/Tokyo"))
                             .append(",")
                             .append(new RealNames().getName(record[1]).isEmpty() ?
                                         new Users().getName(record[1])

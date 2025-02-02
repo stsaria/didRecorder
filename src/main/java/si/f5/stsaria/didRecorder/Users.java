@@ -94,7 +94,7 @@ public class Users {
     private boolean canAdd(String name, String pass) throws IOException {
         if (name.getBytes().length > 18 ||
             pass.getBytes().length > 16 ||
-            !(name.matches("^[A-Za-z0-9]+$") && pass.matches("^[A-Za-z0-9]+$")) ||
+            !(name.matches("^[A-Za-z0-9]+$") && pass.matches("^[a-zA-Z0-9.?/-]$")) ||
             pass.length() < 3)
         {
             return false;

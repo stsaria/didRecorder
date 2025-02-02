@@ -15,37 +15,26 @@
         </nav>
         <p class="bg-secondary" style="width: 100%; height: 2px;"></p>
         <div class="container mt-3">
-            <div>
-                <h3>Functions</h3>
-                <a href="setRealName"><button class="btn btn-secondary">本名追加</button></a>
-                <a href="selectGapDidsS"><button class="btn btn-secondary">●日前のログ</button></a>
-            </div>
-            <hr>
+            <h3>ログ</h3>
+            <form>
+                <div class="mb-3">
+                    <input type="number" name="gap" class="form-control" placeholder="最新から何日前(空欄:0日前)">
+                </div>
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">確認</button>
+                </div>
+            </form>
             <div>
                 <h3>今日のログ</h3>
                 <div>
                     <h6>出席者(フォーマット:ユーザーIDまたは本名)</h6>
-                    <a href="download/today/attendees/csv">ダウンロード(csv)</a>
-                    <pre th:text="${latestLogs[1]}">出席者</pre>
+                    <a th:href="${attendeesDidsDownloadURL}">ダウンロード(csv)</a>
+                    <pre th:text="${didsS[1]}">出席者</pre>
                 </div>
                 <div>
                     <h6>すべて(フォーマット:登録時間,ユーザーIDまたは本名,ログのタイプ,内容)</h6>
-                    <a href="download/today/all/csv">ダウンロード(csv)</a>
-                    <pre th:text="${latestLogs[0]}">すべて</pre>
-                </div>
-            </div>
-            <hr>
-            <div>
-                <h3>昨日のログ</h3>
-                <div>
-                    <h6>出席者(フォーマット:ユーザーIDまたは本名)</h6>
-                    <a href="download/today/attendees/csv?gap=1">ダウンロード(csv)</a>
-                    <pre th:text="${oneGapLatestLogs[1]}">出席者</pre>
-                </div>
-                <div>
-                    <h6>すべて(フォーマット:登録時間,ユーザーIDまたは本名,ログのタイプ,内容)</h6>
-                    <a href="download/today/all/csv?gap=1">ダウンロード(csv)</a>
-                    <pre th:text="${oneGapLatestLogs[0]}">すべて</pre>
+                    <a th:href="${allDidsDownloadURL}">ダウンロード(csv)</a>
+                    <pre th:text="${didsS[0]}">すべて</pre>
                 </div>
             </div>
         </div>

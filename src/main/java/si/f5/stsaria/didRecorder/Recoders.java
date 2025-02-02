@@ -79,7 +79,9 @@ public class Recoders {
                         log
                             .append(TimeUtils.unixTimeToHM(Long.parseLong(record[0]), "Asia/Tokyo"))
                             .append(",")
-                            .append(new Users().getName(record[1]))
+                            .append(new RealNames().getName(record[1]).isEmpty() ?
+                                        new Users().getName(record[1])
+                                    : new RealNames().getName(record[1]))
                             .append(",")
                             .append(StringUtils.replaceEach(
                                     record[2],
@@ -88,8 +90,8 @@ public class Recoders {
                                 )
                             )
                             .append(",")
-                            .append(record[2].matches("[03]")
-                                ? TimeUtils.unixTimeToHM(Long.parseLong(record[3]), "Asia/Tokyo")
+                            .append(record[2].matches("[03]") ?
+                                TimeUtils.unixTimeToHM(Long.parseLong(record[3]), "Asia/Tokyo")
                                 : record[3].replace("\n", " ")
                             )
                             .append("\n");
@@ -98,9 +100,9 @@ public class Recoders {
                         if (!foundUserIds.contains(record[1])){
                             log.append(record[2].equals("0") ?
                                 new RealNames().getName(record[1]).isEmpty() ?
-                                    new Users().getName(record[1]) :
-                                    new RealNames().getName(record[1])
-                                : "").append("\n");
+                                    new Users().getName(record[1])
+                                : new RealNames().getName(record[1])
+                            : "").append("\n");
                             foundUserIds.add(record[1]);
                         }
                         break;

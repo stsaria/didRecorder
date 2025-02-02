@@ -2,6 +2,10 @@ package si.f5.stsaria.didRecorder.controller;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +17,7 @@ import si.f5.stsaria.didRecorder.Recoders;
 import si.f5.stsaria.didRecorder.Users;
 import si.f5.stsaria.didRecorder.checker.Login;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,18 +30,18 @@ public class AdminController {
         if (!Login.adminLoginChecker(token)) return mav;
         mav.setViewName("admin/index");
         int typeLength = 2;
-        String[] latestLogs = new String[typeLength];
-        String[] oneGapLatestLogs = new String[typeLength];
+        String[] latestDidsS = new String[typeLength];
+        String[] oneGapLatestDidsS = new String[typeLength];
         try {
             synchronized (Recoders.lock) {
                 for (int i = 0; i < typeLength; i++){
-                    latestLogs[i] = Recoders.getLatestLog(0, i);
-                    oneGapLatestLogs[i] = Recoders.getLatestLog(1, i);
+                    latestDidsS[i] = Recoders.getLatestLog(0, i);
+                    oneGapLatestDidsS[i] = Recoders.getLatestLog(1, i);
                 }
             }
         } catch (Exception ignore){}
-        mav.addObject("latestLogs", latestLogs);
-        mav.addObject("oneGapLatestLogs", oneGapLatestLogs);
+        mav.addObject("latestLogs", latestDidsS);
+        mav.addObject("oneGapLatestLogs", oneGapLatestDidsS);
         return mav;
     }
     @RequestMapping(path = "/admin/setRealName", method= RequestMethod.GET)
@@ -77,5 +82,57 @@ public class AdminController {
             result = -1;
         }
         return "redirect:/admin/setRealName?result="+result;
+    }
+    @RequestMapping(path = "/admin/selectGapDidsS", method= RequestMethod.GET)
+    public ModelAndView selectGapDids(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam(value = "gap", defaultValue = "0", required = false) String gap, ModelAndView mav) {
+        try {Integer.valueOf(gap);} catch (NumberFormatException ignore) {gap = "0";}
+        mav.setViewName("redirect:/");
+        if (!Login.adminLoginChecker(token)) return mav;
+        mav.setViewName("admin/selectGapDidsS");
+        int typeLength = 2;
+        String[] didsS = new String[typeLength];
+        try {
+            synchronized (Recoders.lock) {
+                for (int i = 0; i < typeLength; i++){
+                    didsS[i] = Recoders.getLatestLog(Integer.parseInt(gap), i);
+                }
+            }
+        } catch (Exception ignore){}
+        mav.addObject("didsS", didsS);
+        mav.addObject("attendeesDidsDownloadURL", "download/today/attendees/csv?gap="+gap);
+        mav.addObject("allDidsDownloadURL", "download/today/all/csv?gap="+gap);
+        return mav;
+    }
+    @RequestMapping(path = "/admin/download/today/all/csv", method= RequestMethod.GET)
+    public ResponseEntity<byte[]> downloadTodayAllCsv(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam(value = "gap", defaultValue = "0", required = false) String gap) {
+        if (!Login.adminLoginChecker(token)) return ResponseEntity.status(HttpStatus.FOUND).header(HttpHeaders.LOCATION, "/").build();
+        try {Integer.valueOf(gap);} catch (NumberFormatException ignore) {gap = "0";}
+        String didsStr = "";
+        try{
+            synchronized (Recoders.lock){
+                didsStr = Recoders.getLatestLog(Integer.parseInt(gap), 0);
+            }
+        } catch (Exception ignore) {}
+        byte[] didsBytes = didsStr.getBytes(StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"todayAll(gap="+gap+").csv\"");
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        return new ResponseEntity<>(didsBytes, headers, HttpStatus.OK);
+    }
+    @RequestMapping(path = "/admin/download/today/attendees/csv", method= RequestMethod.GET)
+    public ResponseEntity<byte[]> downloadTodayAttendeesCsv(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam(value = "gap", defaultValue = "0", required = false) String gap) {
+        if (!Login.adminLoginChecker(token)) return ResponseEntity.status(HttpStatus.FOUND).header(HttpHeaders.LOCATION, "/").build();
+        try {Integer.valueOf(gap);} catch (NumberFormatException ignore) {gap = "0";}
+        String didsStr = "";
+        try{
+            synchronized (Recoders.lock){
+                didsStr = Recoders.getLatestLog(Integer.parseInt(gap), 1);
+            }
+        } catch (Exception ignore) {}
+        byte[] didsBytes = didsStr.getBytes(StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"todayAttendees(gap="+gap+").csv\"");
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        return new ResponseEntity<>(didsBytes, headers, HttpStatus.OK);
     }
 }

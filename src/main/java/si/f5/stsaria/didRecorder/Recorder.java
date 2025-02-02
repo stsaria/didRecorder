@@ -8,12 +8,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 
-public class Recoder {
+public class Recorder {
     private final String userId;
     private final LocalDateTime nowTime;
     private final long nowUnixTime;
     private final String nowYMDTime;
-    public Recoder(String userId){
+    public Recorder(String userId){
         this.userId = userId;
         this.nowTime = TimeUtils.getNowLocalDateTime();
         this.nowUnixTime = TimeUtils.getNowUnixTime();
@@ -26,7 +26,7 @@ public class Recoder {
         else if (this.nowTime.getHour() < 10) return 4;
         else if (this.nowTime.getHour() > 18) return 5;
         int findCount = 0;
-        for (String[] record : Objects.requireNonNull(Recoders.getLastUpdateDayFormatedDids(0))){
+        for (String[] record : Objects.requireNonNull(Recorders.getLastUpdateDayFormatedDids(0))){
             if (Objects.equals(record[1], this.userId)){
                 findCount++;
                 if (findCount >= 4){
@@ -35,7 +35,7 @@ public class Recoder {
                 if (Integer.parseInt(record[2]) > Integer.parseInt(when) || record[2].equals("3")){
                     return 7;
                 }
-                if (!Objects.equals(Recoders.readEndYMDF(), this.nowYMDTime)) {
+                if (!Objects.equals(Recorders.readEndYMDF(), this.nowYMDTime)) {
                     return 0;
                 }
                 if (Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) > 54000){
@@ -47,10 +47,10 @@ public class Recoder {
     }
     public String nextWhen() throws IOException {
         int when = -1;
-        if (!Objects.equals(Recoders.readEndYMDF(), this.nowYMDTime)) {
+        if (!Objects.equals(Recorders.readEndYMDF(), this.nowYMDTime)) {
             return "0";
         }
-        for (String[] record : Objects.requireNonNull(Recoders.getLastUpdateDayFormatedDids(0))){
+        for (String[] record : Objects.requireNonNull(Recorders.getLastUpdateDayFormatedDids(0))){
             if (Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) < 54000 &&
                 Objects.equals(record[1], this.userId))
             {
@@ -62,16 +62,16 @@ public class Recoder {
     }
     public int add(String when, String content) throws IOException {
         content = StringUtils.replaceEach(content, new String[]{"--..--", "\\n"}, new String[]{",", "\n"});
-        synchronized (Recoders.lock) {
+        synchronized (Recorders.lock) {
             int canAddResult = canAdd(when, content);
             if (canAddResult == 0){
                 content = StringUtils.replaceEach(content, new String[]{",", "\n"}, new String[]{"--..--", "\\n"});
                 String record = this.nowUnixTime + "," + this.userId + "," + when + "," + content;
-                if (!(Objects.equals(Recoders.readEndYMDF(), this.nowYMDTime) || Recoders.readDidsF().isEmpty())) {
+                if (!(Objects.equals(Recorders.readEndYMDF(), this.nowYMDTime) || Recorders.readDidsF().isEmpty())) {
                     record = "\n" + record;
                 }
-                Recoders.appendDidsF(record);
-                Recoders.writeEndYMDF(this.nowYMDTime);
+                Recorders.appendDidsF(record);
+                Recorders.writeEndYMDF(this.nowYMDTime);
                 return 0;
             }
             return canAddResult;
@@ -80,7 +80,7 @@ public class Recoder {
     public String getLatestLog(int gap) throws IOException {
         DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm");
         StringBuilder log = new StringBuilder();
-        for (String[] record : Objects.requireNonNull(Recoders.getLastUpdateDayFormatedDids(gap))){
+        for (String[] record : Objects.requireNonNull(Recorders.getLastUpdateDayFormatedDids(gap))){
             if (!(Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) < 54000)){
                 break;
             } else if (!Objects.equals(record[1], this.userId)){

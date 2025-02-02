@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import si.f5.stsaria.didRecorder.RealNames;
-import si.f5.stsaria.didRecorder.Recoders;
+import si.f5.stsaria.didRecorder.Recorders;
 import si.f5.stsaria.didRecorder.Users;
 import si.f5.stsaria.didRecorder.checker.Login;
 
@@ -33,10 +33,10 @@ public class AdminController {
         String[] latestDidsS = new String[typeLength];
         String[] oneGapLatestDidsS = new String[typeLength];
         try {
-            synchronized (Recoders.lock) {
+            synchronized (Recorders.lock) {
                 for (int i = 0; i < typeLength; i++){
-                    latestDidsS[i] = Recoders.getLatestLog(0, i);
-                    oneGapLatestDidsS[i] = Recoders.getLatestLog(1, i);
+                    latestDidsS[i] = Recorders.getLatestLog(0, i);
+                    oneGapLatestDidsS[i] = Recorders.getLatestLog(1, i);
                 }
             }
         } catch (Exception ignore){}
@@ -92,9 +92,9 @@ public class AdminController {
         int typeLength = 2;
         String[] didsS = new String[typeLength];
         try {
-            synchronized (Recoders.lock) {
+            synchronized (Recorders.lock) {
                 for (int i = 0; i < typeLength; i++){
-                    didsS[i] = Recoders.getLatestLog(Integer.parseInt(gap), i);
+                    didsS[i] = Recorders.getLatestLog(Integer.parseInt(gap), i);
                 }
             }
         } catch (Exception ignore){}
@@ -109,8 +109,8 @@ public class AdminController {
         try {Integer.valueOf(gap);} catch (NumberFormatException ignore) {gap = "0";}
         String didsStr = "";
         try{
-            synchronized (Recoders.lock){
-                didsStr = Recoders.getLatestLog(Integer.parseInt(gap), 0);
+            synchronized (Recorders.lock){
+                didsStr = Recorders.getLatestLog(Integer.parseInt(gap), 0);
             }
         } catch (Exception ignore) {}
         byte[] didsBytes = didsStr.getBytes(StandardCharsets.UTF_8);
@@ -125,8 +125,8 @@ public class AdminController {
         try {Integer.valueOf(gap);} catch (NumberFormatException ignore) {gap = "0";}
         String didsStr = "";
         try{
-            synchronized (Recoders.lock){
-                didsStr = Recoders.getLatestLog(Integer.parseInt(gap), 1);
+            synchronized (Recorders.lock){
+                didsStr = Recorders.getLatestLog(Integer.parseInt(gap), 1);
             }
         } catch (Exception ignore) {}
         byte[] didsBytes = didsStr.getBytes(StandardCharsets.UTF_8);

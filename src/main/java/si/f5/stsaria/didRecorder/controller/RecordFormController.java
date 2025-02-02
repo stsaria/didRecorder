@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
-import si.f5.stsaria.didRecorder.Recoder;
+import si.f5.stsaria.didRecorder.Recorder;
 import si.f5.stsaria.didRecorder.TimeUtils;
 import si.f5.stsaria.didRecorder.Users;
 import si.f5.stsaria.didRecorder.checker.Login;
@@ -36,9 +36,9 @@ public class RecordFormController {
         }
         try {
             synchronized (Users.lock) {
-                Recoder recoder = new Recoder(token.split("\\.")[0]);
-                when = recoder.nextWhen();
-                log = recoder.getLatestLog(0);
+                Recorder recorder = new Recorder(token.split("\\.")[0]);
+                when = recorder.nextWhen();
+                log = recorder.getLatestLog(0);
             }
         } catch (Exception ignore) {
             result = "-1";
@@ -58,10 +58,10 @@ public class RecordFormController {
             return "redirect:/?result=-2";
         }
         time = String.valueOf(TimeUtils.hMTimeToUnixTime(time));
-        Recoder recoder = new Recoder(token.split("\\.")[0]);
+        Recorder recorder = new Recorder(token.split("\\.")[0]);
         int result;
         try{
-            result = recoder.add("0", time);
+            result = recorder.add("0", time);
         } catch (Exception ignore) {
             result = 1;
         }
@@ -72,10 +72,10 @@ public class RecordFormController {
         if (!Login.loginChecker(token)){
             return "redirect:/login";
         }
-        Recoder recoder = new Recoder(token.split("\\.")[0]);
+        Recorder recorder = new Recorder(token.split("\\.")[0]);
         int result;
         try{
-            result = recoder.add("1", content);
+            result = recorder.add("1", content);
         } catch (Exception ignore) {
             result = -1;
         }
@@ -86,10 +86,10 @@ public class RecordFormController {
         if (!Login.loginChecker(token)){
             return "redirect:/login";
         }
-        Recoder recoder = new Recoder(token.split("\\.")[0]);
+        Recorder recorder = new Recorder(token.split("\\.")[0]);
         int result;
         try{
-            result = recoder.add("2", content);
+            result = recorder.add("2", content);
         } catch (Exception ignore) {
             result = -1;
         }
@@ -104,10 +104,10 @@ public class RecordFormController {
             return "redirect:/?result=-2";
         }
         time = String.valueOf(TimeUtils.hMTimeToUnixTime(time));
-        Recoder recoder = new Recoder(token.split("\\.")[0]);
+        Recorder recorder = new Recorder(token.split("\\.")[0]);
         int result;
         try{
-            result = recoder.add("3", time);
+            result = recorder.add("3", time);
         } catch (Exception ignore) {
             result = -1;
         }
@@ -133,12 +133,12 @@ public class RecordFormController {
             times[i] = String.valueOf(TimeUtils.hMTimeToUnixTime(times[i]));
         }
         String[] contents = {times[0], amContent, pmContent, times[1]};
-        Recoder recoder = new Recoder(token.split("\\.")[0]);
+        Recorder recorder = new Recorder(token.split("\\.")[0]);
         int resultT;
         int result = -22;
         for (int i = 0; i < contents.length; i++){
             try{
-                resultT = recoder.add(String.valueOf(i), contents[i]);
+                resultT = recorder.add(String.valueOf(i), contents[i]);
                 result = resultT;
                 if (resultT != 0) break;
             } catch (Exception ignore) {

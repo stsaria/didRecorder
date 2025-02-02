@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Recoders {
+public class Recorders {
     public static final Object lock = new Object();
     public static String readEndYMDF() throws IOException {
         Path endTimeFilePath = Paths.get("records/endYMD.record");
@@ -58,7 +58,7 @@ public class Recoders {
         return recordsS;
     }
     public static ArrayList<String[]> getLastUpdateDayFormatedDids(int gap) throws IOException {
-        ArrayList<ArrayList<String[]>> recordsS = Objects.requireNonNull(Recoders.getFormatedDidsS());
+        ArrayList<ArrayList<String[]>> recordsS = Objects.requireNonNull(Recorders.getFormatedDidsS());
         if ((recordsS.size() - 1 - gap) < 0){
 
             return new ArrayList<>(List.of());
@@ -67,7 +67,7 @@ public class Recoders {
     }
     public static String getLatestLog(int gap, int type) throws IOException {
         StringBuilder log = new StringBuilder();
-        ArrayList<String[]> dids = Objects.requireNonNull(Recoders.getLastUpdateDayFormatedDids(gap));
+        ArrayList<String[]> dids = Objects.requireNonNull(Recorders.getLastUpdateDayFormatedDids(gap));
         ArrayList<String> foundUserIds = new ArrayList<>();
         synchronized (Users.lock) {
             for (String[] record : dids) {

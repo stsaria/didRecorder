@@ -3,113 +3,105 @@ package si.f5.stsaria.didRecorder;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
+
 public class Recoder {
-    private static final Object lock = new Object();
     private final String userId;
+    private final LocalDateTime nowTime;
+    private final long nowUnixTime;
+    private final String nowYMDTime;
     public Recoder(String userId){
         this.userId = userId;
+        this.nowTime = TimeUtils.getNowLocalDateTime();
+        this.nowUnixTime = TimeUtils.getNowUnixTime();
+        this.nowYMDTime = TimeUtils.getNowYMDTime();
     }
-    private String readEndYMDF() throws IOException {
-        Path endTimeFilePath = Paths.get("endYMD.record");
-        if (endTimeFilePath.toFile().isFile()) {
-            return Files.readString(endTimeFilePath);
-        } else {
-            return "";
-        }
-    }
-    private String readDidsF() throws IOException {
-        Path didsFilePath = Paths.get("dids.record");
-        if (didsFilePath.toFile().isFile()) {
-            return Files.readString(didsFilePath);
-        } else {
-            return "";
-        }
-    }
-    private void writeEndYMDF(String string) throws IOException {
-        Path endTimeFilePath = Paths.get("endYMD.record");
-        FileWriter endTimeWriter = new FileWriter(endTimeFilePath.toFile());
-        endTimeWriter.write(string);
-        endTimeWriter.close();
-    }
-    private void appendDidsF(String string) throws IOException {
-        File didsFile = new File("dids.record");
-        PrintWriter didsWriter = new PrintWriter(new BufferedWriter(new FileWriter(didsFile)));
-        didsWriter.println(string);
-        didsWriter.close();
-    }
-    private ArrayList<ArrayList<String[]>> getFormatedDidsS() throws IOException {
-        ArrayList<ArrayList<String[]>> recordsS = new ArrayList<>();
-        for(String records : readDidsF().split("\n\n")){
-            recordsS.add(new ArrayList<>());
-            for(String record : records.split("\n")){
-                if (record.split(",").length != 5){
-                    continue;
-                }
-                recordsS.getLast().add(record.split(","));
-            }
-        }
-        return recordsS;
-    }
-    private ArrayList<String[]> getLastUpdateDayFormatedDids() throws IOException {
-        ArrayList<ArrayList<String[]>> recordsS = Objects.requireNonNull(this.getFormatedDidsS());
-        if (recordsS.isEmpty()){
-            return new ArrayList<>(List.of());
-        }
-        return recordsS.getLast();
-    }
-    private boolean canAdd(String when, int comeOrGoUnixTime, String content) throws IOException {
-        LocalDateTime nowTime = LocalDateTime.now();
-        DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-
-        int comeOrGoHour = LocalDateTime.ofInstant(Instant.ofEpochSecond(comeOrGoUnixTime), ZoneId.systemDefault()).atZone(ZoneId.of("Asia/Tokyo")).getHour();
-        if (!(when.equals("am") || when.equals("pm")) || !(comeOrGoHour >= 10 && comeOrGoHour <= 18) || content.getBytes().length > 1024 || content.split("\n").length > 5){
-            return false;
-        }
+    public int canAdd(String when, String content) throws IOException {
+        if (!when.matches("[0123]")) return 1;
+        else if (content.getBytes().length > 512) return 2;
+        else if (content.split("\n").length > 5) return 3;
+        else if (this.nowTime.getHour() < 10) return 4;
+        else if (this.nowTime.getHour() > 18) return 5;
         int findCount = 0;
-        for (String[] record : Objects.requireNonNull(getLastUpdateDayFormatedDids())){
+        for (String[] record : Objects.requireNonNull(Recoders.getLastUpdateDayFormatedDids(0))){
             if (Objects.equals(record[1], this.userId)){
                 findCount++;
-                if (findCount > 2){
-                    return false;
-                } else if (!Objects.equals(this.readEndYMDF(), nowTime.format(timeFormat))) {
-                    return true;
-                } else if (Math.abs(Integer.parseInt(record[1]) - comeOrGoUnixTime) > 54000){
-                    return true;
-                } else if (when.equals("am")){
-                    return false;
-                } else if (record[2].equals("am")){
-                    return true;
+                if (findCount >= 4){
+                    return 6;
+                }
+                if (Integer.parseInt(record[2]) > Integer.parseInt(when) || record[2].equals("3")){
+                    return 7;
+                }
+                if (!Objects.equals(Recoders.readEndYMDF(), this.nowYMDTime)) {
+                    return 0;
+                }
+                if (Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) > 54000){
+                    return 0;
                 }
             }
         }
-        return true;
+        return 0;
     }
-    public boolean add(String when, int comeOrGoUnixTime, String content) throws IOException {
-        content = StringUtils.replaceEach(content, new String[]{",", "\n"}, new String[]{"--..--", "\\n"});
-        synchronized (lock) {
-            if (canAdd(when, comeOrGoUnixTime, content)){
-                LocalDateTime nowTime = LocalDateTime.now();
-                DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-                String dataOfAdd = nowTime.atZone(ZoneId.systemDefault()).toEpochSecond() + "," + this.userId + "," + when + "," + comeOrGoUnixTime + "," + content;
-                if (!(Objects.equals(this.readEndYMDF(), nowTime.format(timeFormat)) || this.readDidsF().isEmpty())) {
-                    dataOfAdd = "\n" + dataOfAdd;
-                }
-                this.appendDidsF(dataOfAdd);
-                this.writeEndYMDF(nowTime.format(timeFormat));
-                return true;
+    public String nextWhen() throws IOException {
+        int when = -1;
+        if (!Objects.equals(Recoders.readEndYMDF(), this.nowYMDTime)) {
+            return "0";
+        }
+        for (String[] record : Objects.requireNonNull(Recoders.getLastUpdateDayFormatedDids(0))){
+            if (Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) < 54000 &&
+                Objects.equals(record[1], this.userId))
+            {
+                when = Integer.parseInt(record[2]);
             }
         }
-        return false;
+        when++;
+        return String.valueOf(when);
+    }
+    public int add(String when, String content) throws IOException {
+        content = StringUtils.replaceEach(content, new String[]{"--..--", "\\n"}, new String[]{",", "\n"});
+        synchronized (Recoders.lock) {
+            int canAddResult = canAdd(when, content);
+            if (canAddResult == 0){
+                content = StringUtils.replaceEach(content, new String[]{",", "\n"}, new String[]{"--..--", "\\n"});
+                String record = this.nowUnixTime + "," + this.userId + "," + when + "," + content;
+                if (!(Objects.equals(Recoders.readEndYMDF(), this.nowYMDTime) || Recoders.readDidsF().isEmpty())) {
+                    record = "\n" + record;
+                }
+                Recoders.appendDidsF(record);
+                Recoders.writeEndYMDF(this.nowYMDTime);
+                return 0;
+            }
+            return canAddResult;
+        }
+    }
+    public String getLatestLog(int gap) throws IOException {
+        DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm");
+        StringBuilder log = new StringBuilder();
+        for (String[] record : Objects.requireNonNull(Recoders.getLastUpdateDayFormatedDids(gap))){
+            if (!(Math.abs(Integer.parseInt(record[0]) - this.nowUnixTime) < 54000)){
+                break;
+            } else if (!Objects.equals(record[1], this.userId)){
+                continue;
+            }
+            log
+                .append(timeFormat.format(TimeUtils.unixTimeToLocalDateTime(Long.parseLong(record[0]), "Asia/Tokyo")))
+                .append("\n")
+                .append(StringUtils.replaceEach(
+                        record[2],
+                        new String[]{"0", "1", "2", "3"},
+                        new String[]{"到着", "午前の記録", "午後の記録", "出発"}
+                    )
+                )
+                .append("\n内容:")
+                .append(record[2].matches("[03]")
+                    ? timeFormat.format(TimeUtils.unixTimeToLocalDateTime(Long.parseLong(record[3]), "Asia/Tokyo"))
+                    : record[3]
+                )
+                .append("\n\n");
+        }
+        return log.toString();
     }
 }

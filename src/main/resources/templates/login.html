@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+    <head>
+        <title>DidRecorder - ユーザーログイン</title>
+        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    </head>
+    <body data-bs-theme="dark">
+        <div class="container mt-3">
+            <h1>ログイン</h1>
+            <form method="post">
+                <div class="mb-3">
+                    <select class="form-select" name="id" required>
+                        <option disabled selected value="">ユーザー選択</option>
+                        <option th:each="user : ${users}" th:value="${user[0]}" th:text="${user[1]}"></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <input type="password" name="pass" class="form-control" placeholder="パスワード" required>
+                </div>
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">ログイン</button>
+                </div>
+            </form>
+            <hr>
+            <h3>まだ、アカウントを持っていませんか？</h3>
+            <a href="/register"><button class="btn btn-primary">ユーザー登録</button></a>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    </body>
+</html>

@@ -5,24 +5,120 @@
         <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     </head>
-    <body>
-        <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <body data-bs-theme="dark">
+        <nav class="navbar navbar-expand-lg text-white fw-bold">
             <div class="container-fluid">
-                <span class="navbar-brand">DidRecorder</span>
+                <a href="." class="navbar-brand text-white">DidRecorder</a>
+                <span>Version β1.0</span>
                 <span id="today">today</span>
             </div>
         </nav>
-        <div class="container-fluid">
-            <div class="nextRecord">
-                <from action="nextRecord">
-                    <h3 th:text="${when}"></h3>
-                </from>
+        <p class="bg-secondary" style="width: 100%; height: 2px;"></p>
+        <div class="container mt-3">
+            <div th:switch="${result}">
+                <p th:case ==-2 class="text-danger">時間の形式が意味不明です。</p>
+                <p th:case ==-1 class="text-danger">内部エラーが発生しました。</p>
+                <p th:case ==0 class="text-success">成功しました！</p>
+                <p th:case ==1 class="text-danger">したことのタイプが意味不明です。</p>
+                <p th:case ==2 class="text-danger">記録の内容は、すべて英語なら512文字まで、日本語なら256文字までです。</p>
+                <p th:case ==3 class="text-danger">記録の改行は5行までです。</p>
+                <p th:case ==4 class="text-danger">10時より前には記録できません。</p>
+                <p th:case ==5 class="text-danger">18時より後には記録できません。</p>
+                <p th:case ==6 class="text-danger">今日の記録はすべて終了しています。</p>
+                <p th:case ==7 class="text-danger">既に後の記録をしているのに、それよりも前の記録または、同じ記録をしようとしています。（例：午後の記録を完了しているのに、出席を出す）</p>
             </div>
+            <div class="nextRecord">
+                <div th:switch="${when}">
+                    <div th:case =="0">
+                        <h3>登校時間送信</h3>
+                        <form action="/record/0" method="post">
+                            <div class="mb-3">
+                                <label for="comeTime">到着時間</label>
+                                <input class="form-control" type="time" name="time" id="comeTime" min="10:00" max="18:00" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="submit" class="btn btn-primary">
+                            </div>
+                        </form>
+                    </div>
+                    <div th:case =="1">
+                        <h3>午前の記録</h3>
+                        <form action="/record/1" method="post">
+                            <div class="mb-3">
+                                <textarea class="form-control" rows="5" name="content" id="amContent" maxlength="200" placeholder="内容:512バイトまで(日本語256文字)" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <input type="submit" class="btn btn-primary">
+                            </div>
+                        </form>
+                    </div>
+                    <div th:case =="2">
+                        <h3>午後の記録</h3>
+                        <form action="/record/2" method="post">
+                            <div class="mb-3">
+                                <label for="pmContent">内容</label>
+                                <textarea class="form-control" rows="5" name="content" id="pmContent" maxlength="200" placeholder="内容:512バイトまで(日本語256文字)" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <input type="submit" class="btn btn-primary">
+                            </div>
+                        </form>
+                    </div>
+                    <div th:case =="3">
+                        <h3>下校時間送信</h3>
+                        <form action="/record/3" method="post">
+                            <div class="mb-3">
+                                <label for="goTime">出発時間</label>
+                                <input class="form-control" type="time" name="time" id="goTime" min="10:00" max="18:00" value="18:00" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="submit" class="btn btn-primary">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <hr>
+                <div>
+                    <h3>すべて一度に送信する（既に送信された項目は無視）</h3>
+                    <form action="/record/all" method="post">
+                        <div class="mb-3">
+                            <label for="comeTimeA">到着時間:10:00~18:00</label>
+                            <input class="form-control" type="time" name="comeTime" id="comeTimeA" min="10:00" max="18:00" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amContentA">午前</label>
+                            <textarea class="form-control" rows="5" name="amContent" id="amContentA" maxlength="200" placeholder="内容:512バイトまで(日本語256文字)" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pmContentA">午後</label>
+                            <textarea class="form-control" rows="5" name="pmContent" id="pmContentA" maxlength="200" placeholder="内容:512バイトまで(日本語256文字)" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="goTimeA">出発時間:10:00~18:00</label>
+                            <input class="form-control" type="time" name="goTime" id="goTimeA" min="10:00" max="18:00" value="18:00" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="submit" class="btn btn-primary">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <hr>
+            <div>
+                <h3>15時間以内の記録(自分)</h3>
+                <pre th:text="${log}"></pre>
+            </div>
+            <hr>
+            <a href="/admin/"><button class="btn btn-outline-dark">Admin Page(dont try :|)</button></a>
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
         <script>
-            let today = new Date();
-            document.getElementById("today").innerHTML = today.getFullYear()+"/"+today.getMonth()+1+"/"+today.getDate();
+            function emp(){}
+            let now = new Date();
+            document.getElementById("today").innerHTML = now.getFullYear()+"/"+now.getMonth()+1+"/"+now.getDate();
+
+            document.getElementById("comeTime") != null ? document.getElementById("comeTime").value = ("0"+now.getHours()).slice(-2)+":"+("0"+now.getMinutes()).slice(-2) : emp();
+            document.getElementById("comeTimeA").value = ("0"+now.getHours()).slice(-2)+":"+("0"+now.getMinutes()).slice(-2);
         </script>
     </body>
 </html>

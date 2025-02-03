@@ -92,10 +92,11 @@ public class Users {
         return generatedAuthID;
     }
     private boolean canAdd(String name, String pass) throws IOException {
-        if (name.getBytes().length > 18 ||
-            pass.getBytes().length > 16 ||
-            !(name.matches("^[A-Za-z0-9]+$") && pass.matches("^[a-zA-Z0-9.?/-]$")) ||
-            pass.length() < 3)
+        if (name.getBytes().length > DidRecorderApplication.properties.getPropertyInt("nameMaxByteSize") ||
+            pass.getBytes().length > DidRecorderApplication.properties.getPropertyInt("passMaxByteSize") ||
+            pass.getBytes().length < DidRecorderApplication.properties.getPropertyInt("passMinByteSize") ||
+            !(name.matches("^[A-Za-z0-9]+$") && pass.matches("^[a-zA-Z0-9.?/-]+$"))
+            )
         {
             return false;
         }

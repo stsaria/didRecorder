@@ -53,7 +53,7 @@ public class RecordFormController {
         return mav;
     }
     @RequestMapping(path = "/record/0", method=RequestMethod.POST)
-    public String recordComeTime(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("time") String time, HttpServletResponse hsr) {
+    public String recordComeTime(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("time") String time) {
         if (!Login.loginChecker(token)){
             return "redirect:/login";
         }
@@ -66,12 +66,12 @@ public class RecordFormController {
         try{
             result = recorder.add("0", time);
         } catch (Exception ignore) {
-            result = 1;
+            result = -1;
         }
         return "redirect:/?result="+result;
     }
     @RequestMapping(path = "/record/1", method=RequestMethod.POST)
-    public String recordAmContent(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("content") String content, HttpServletResponse hsr) {
+    public String recordAmContent(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("content") String content) {
         if (!Login.loginChecker(token)){
             return "redirect:/login";
         }
@@ -85,7 +85,7 @@ public class RecordFormController {
         return "redirect:/?result="+result;
     }
     @RequestMapping(path = "/record/2", method=RequestMethod.POST)
-    public String recordPmContent(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("content") String content, HttpServletResponse hsr) {
+    public String recordPmContent(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("content") String content) {
         if (!Login.loginChecker(token)){
             return "redirect:/login";
         }
@@ -99,7 +99,7 @@ public class RecordFormController {
         return "redirect:/?result="+result;
     }
     @RequestMapping(path = "/record/3", method=RequestMethod.POST)
-    public String recordGoTime(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("time") String time, HttpServletResponse hsr) {
+    public String recordGoTime(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("time") String time) {
         if (!Login.loginChecker(token)){
             return "redirect:/login";
         }
@@ -117,7 +117,7 @@ public class RecordFormController {
         return "redirect:/?result="+result;
     }
     @RequestMapping(path = "/record/all", method=RequestMethod.POST)
-    public String recordAll(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("comeTime") String comeTime, @RequestParam("amContent") String amContent, @RequestParam("pmContent") String pmContent, @RequestParam("goTime") String goTime, HttpServletResponse hsr) {
+    public String recordAll(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("comeTime") String comeTime, @RequestParam("amContent") String amContent, @RequestParam("pmContent") String pmContent, @RequestParam("goTime") String goTime) {
         boolean loggedIn = false;
         try {
             synchronized (Users.lock) {

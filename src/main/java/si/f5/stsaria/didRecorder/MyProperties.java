@@ -25,6 +25,7 @@ public class MyProperties extends Properties {
         this.setDefaultProperty("nameMaxByteSize", "20");
         this.setDefaultProperty("passMaxByteSize", "30");
         this.setDefaultProperty("passMinByteSize", "4");
+        this.setDefaultProperty("maxRecordLines", "5");
         this.setDefaultProperty("minTimeHours", "10");
         this.setDefaultProperty("maxTimeHours", "18");
         this.setDefaultProperty("dayChangeThresholdSeconds", "54000");

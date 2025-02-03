@@ -54,6 +54,7 @@ public class RealNames {
         return 0;
     }
     public int add(String userId, String name) throws IOException {
+        name = name.replace(",", "");
         synchronized (lock){
             int result = this.canAdd(userId, name);
             if(result == 0){

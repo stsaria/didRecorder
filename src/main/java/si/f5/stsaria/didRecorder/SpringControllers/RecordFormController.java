@@ -13,6 +13,7 @@ import si.f5.stsaria.didRecorder.Records.User;
 import si.f5.stsaria.didRecorder.TimeUtils;
 import si.f5.stsaria.didRecorder.checker.Login;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 @Controller
@@ -44,7 +45,7 @@ public class RecordFormController {
             synchronized (FileLocks.did) {
                 DidR didR = new DidR();
                 when = didR.nextWhen(user);
-                log = didR.getLatestUserLog(user, 0);
+                log = didR.getLatestUserLog(user, 0, 0);
             }
         } catch (Exception ignore) {
             result = "-1";
@@ -163,5 +164,50 @@ public class RecordFormController {
             }
         }
         return "redirect:/?result="+result;
+    }
+    @RequestMapping(path = "/comeTimeChart", method=RequestMethod.GET)
+    public ModelAndView comeTimeChart(@CookieValue(name = "token", defaultValue = "", required = false) String token, ModelAndView mav){
+        mav.setViewName("redirect:/login");
+        if (!Login.loginChecker(token)) return mav;
+        mav.setViewName("comeTimeChart");
+        User user;
+        String[] comeHMs;
+        try{
+            synchronized (FileLocks.user) {
+                user = new UserR().getUser(token.split("-")[0]);
+            }
+            synchronized (FileLocks.did) {
+                DidR didR = new DidR();
+                comeHMs = didR.getLatestUserLog(user, 0, 1).split("\n");
+            }
+        } catch (Exception ignore) {
+            return mav;
+        }
+        ArrayList<String> labels = new ArrayList<>();
+        int[] data;
+        String[] hMArray;
+        int h;
+        int m;
+        String labelName;
+        for (String comeHM : comeHMs){
+            hMArray = comeHM.split(":");
+            if (hMArray.length != 2) continue;
+            labelName = (Integer.parseInt(hMArray[1]) >= 45 ? Integer.parseInt(hMArray[0]) + 1 : hMArray[0])+":"+(Integer.parseInt(hMArray[1]) < 45 && Integer.parseInt(hMArray[1]) >= 30 ? "30" : "00");
+            if (!labels.contains(labelName)){
+                labels.add(labelName);
+            }
+        }
+        data = new int[labels.size()];
+        for (String comeHM : comeHMs){
+            hMArray = comeHM.split(":");
+            if (hMArray.length != 2) continue;
+            h = Integer.parseInt(hMArray[0]);
+            m = Integer.parseInt(hMArray[1]);
+            labelName = (m >= 45 ? h + 1 : h)+":"+(m < 45 && m >= 30 ? "30" : "00");
+            data[labels.indexOf(labelName)]++;
+        }
+        mav.addObject("labels", labels);
+        mav.addObject("data", data);
+        return mav;
     }
 }

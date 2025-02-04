@@ -42,7 +42,7 @@ public class LoginAndRegisterFormController {
                 }
             } catch (Exception ignore) {}
         }
-        if (!token.isEmpty()){
+        if (!token.replace("-", "").isEmpty()){
             Cookie tokenCookie = new Cookie("token", token);
             tokenCookie.setMaxAge(1728000);
             hsr.addCookie(tokenCookie);
@@ -65,7 +65,7 @@ public class LoginAndRegisterFormController {
                 token = userInfo[0]+"-"+userInfo[1];
             } catch (Exception ignore) {}
         }
-        if (!token.replace(".", "").isEmpty()){
+        if (!token.replace("-", "").isEmpty()){
             Cookie tokenCookie = new Cookie("token", token);
             tokenCookie.setMaxAge(1728000);
             hsr.addCookie(tokenCookie);

@@ -36,10 +36,9 @@ public class UserR {
         return null;
     }
     public boolean authForPass(String id, String pass) throws IOException {
-        if (this.exists(id)) {return false;}
-        User user = getUser(id);
+        if (!this.exists(id)) {return false;}
         for (User userF : UserFC.records()){
-            if (userF.equals(user) && user.sha256Pass.equals(Hash.sha256Hex(pass))){
+            if (userF.id.equals(id) && userF.sha256Pass.equals(Hash.sha256Hex(pass))){
                 return true;
             }
         }
@@ -49,9 +48,8 @@ public class UserR {
         String[] spritCommaToken = token.split("-");
         if (spritCommaToken.length != 2) {return false;}
         if (!this.exists(spritCommaToken[0])) {return false;}
-        User user = this.getUser(spritCommaToken[0]);
         for (UserAuth userAuth : UserAuthFC.records()){
-            if (userAuth.user.id.equals(user.id) &&
+            if (userAuth.user.id.equals(spritCommaToken[0]) &&
                 userAuth.auth.equals(Hash.sha256Hex(spritCommaToken[1])) &&
                 userAuth.limitUnixTime - this.nowUnixTime > 0)
             {

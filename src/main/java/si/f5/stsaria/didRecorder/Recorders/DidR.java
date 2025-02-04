@@ -118,12 +118,11 @@ public class DidR {
                             .append("\n");
                         break;
                     case 1:
-                        if (!foundUserIds.contains(did.user.id)){
-                            log.append(did.type == 0 ?
-                                new RealNameR().existsUser(did.user) ?
-                                    new RealNameR().getRealName(did.user).name
-                                : did.user.name
-                            : "").append(",").append(TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo"));
+                        if (!foundUserIds.contains(did.user.id) && did.type == 0){
+                            log.append(new RealNameR().existsUser(did.user) ?
+                                new RealNameR().getRealName(did.user).name
+                            : did.user.name)
+                            .append(",").append(TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo"));
                             foundUserIds.add(did.user.id);
                         }
                         break;
@@ -132,7 +131,7 @@ public class DidR {
         }
         return log.toString();
     }
-    public String getLatestUserLog(User user, int gap) throws IOException {
+    public String getLatestUserLog(User user, int gap, int type) throws IOException {
         StringBuilder log = new StringBuilder();
         for (Did did : this.lastUpdateDids(gap)){
             if (!(Math.abs(did.makeUnixTime - this.nowUnixTime) < (gap == 0 ?
@@ -143,21 +142,25 @@ public class DidR {
             } else if (!did.user.id.equals(user.id)){
                 continue;
             }
-            log
-                .append(TimeUtils.unixTimeToHM(did.makeUnixTime, "Asia/Tokyo"))
-                .append("\n")
-                .append(StringUtils.replaceEach(
-                        String.valueOf(did.type),
-                        new String[]{"0", "1", "2", "3"},
-                        new String[]{"到着", "午前の記録", "午後の記録", "出発"}
-                    )
-                )
-                .append("\n内容:")
-                .append(String.valueOf(did.type).matches("[03]")
-                    ? TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo")
-                    : did.contentString
-                )
-                .append("\n\n");
+            switch (type) {
+                case 0:
+                    log
+                        .append(TimeUtils.unixTimeToHM(did.makeUnixTime, "Asia/Tokyo"))
+                        .append("\n")
+                        .append(StringUtils.replaceEach(
+                                String.valueOf(did.type),
+                                new String[]{"0", "1", "2", "3"},
+                                new String[]{"到着", "午前の記録", "午後の記録", "出発"}
+                            )
+                        )
+                        .append("\n内容:")
+                        .append(String.valueOf(did.type).matches("[03]")?
+                            TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo")
+                        : did.contentString)
+                        .append("\n\n");
+                case 1:
+                    log.append(did.type == 0 ? TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo")+"\n" : "");
+            }
         }
         return log.toString();
     }

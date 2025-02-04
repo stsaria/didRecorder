@@ -63,7 +63,6 @@ public class LoginAndRegisterFormController {
             try {
                 userInfo = new UserR().add(name, pass);
                 token = userInfo[0]+"-"+userInfo[1];
-                System.out.println(token);
             } catch (Exception ignore) {}
         }
         if (!token.replace(".", "").isEmpty()){

@@ -29,6 +29,7 @@ public class MyProperties extends Properties {
         this.setDefaultProperty("minTimeHours", "10");
         this.setDefaultProperty("maxTimeHours", "18");
         this.setDefaultProperty("dayChangeThresholdSeconds", "54000");
+        this.setDefaultProperty("tokenAuthLimitSeconds", "1728000");
         this.setDefaultProperty("maxRecordContentByteSize", "512");
 
         FileOutputStream propertiesOutput = new FileOutputStream("records/didRecorder.properties");

@@ -1,11 +1,15 @@
-package si.f5.stsaria.didRecorder.controller;
+package si.f5.stsaria.didRecorder.SpringControllers;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
-import si.f5.stsaria.didRecorder.Users;
+import si.f5.stsaria.didRecorder.RecordFileControllers.FileLocks;
+import si.f5.stsaria.didRecorder.RecordFileControllers.UserFC;
+import si.f5.stsaria.didRecorder.Recorders.UserR;
+import si.f5.stsaria.didRecorder.Records.User;
+import si.f5.stsaria.didRecorder.Records.UserAuth;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,10 +19,10 @@ public class LoginAndRegisterFormController {
     @RequestMapping(path = "/login", method= RequestMethod.GET)
     public ModelAndView login(ModelAndView mav) {
         mav.setViewName("login");
-        ArrayList<String[]> users = new ArrayList<>(List.of());
+        ArrayList<User> users = new ArrayList<>(List.of());
         try{
-            synchronized (Users.lock) {
-                users = new Users().getFormatedUsers();
+            synchronized (FileLocks.user){
+                users = UserFC.records();
             }
         } catch (Exception ignore) {}
         mav.addObject("users", users);
@@ -28,10 +32,14 @@ public class LoginAndRegisterFormController {
     public ModelAndView login(@RequestParam("id") String id, @RequestParam("pass") String pass, ModelAndView mav, HttpServletResponse hsr){
         mav.setViewName("redirect:/");
         String token = "";
-        Users users = new Users();
-        synchronized (Users.lock){
+        UserR userR = new UserR();
+        synchronized (FileLocks.user){
             try {
-                if (users.authForPass(id, pass)) token = users.generateAndAppendAuthToken(id);
+                if (userR.authForPass(id, pass)){
+                    User user = userR.getUser(id);
+                    UserAuth auth = userR.generateAndAppendAuthToken(user);
+                    token = id+"-"+auth.auth;
+                }
             } catch (Exception ignore) {}
         }
         if (!token.isEmpty()){
@@ -50,13 +58,15 @@ public class LoginAndRegisterFormController {
     public ModelAndView register(@RequestParam("name") String name, @RequestParam("pass") String pass, ModelAndView mav, HttpServletResponse hsr){
         mav.setViewName("redirect:/");
         String token = "";
-        Users users = new Users();
-        synchronized (Users.lock){
+        String[] userInfo;
+        synchronized (FileLocks.user){
             try {
-                token = users.add(name, pass)[1];
+                userInfo = new UserR().add(name, pass);
+                token = userInfo[0]+"-"+userInfo[1];
+                System.out.println(token);
             } catch (Exception ignore) {}
         }
-        if (!token.isEmpty()){
+        if (!token.replace(".", "").isEmpty()){
             Cookie tokenCookie = new Cookie("token", token);
             tokenCookie.setMaxAge(1728000);
             hsr.addCookie(tokenCookie);

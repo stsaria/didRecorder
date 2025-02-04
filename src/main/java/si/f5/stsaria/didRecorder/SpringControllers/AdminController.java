@@ -1,4 +1,4 @@
-package si.f5.stsaria.didRecorder.controller;
+package si.f5.stsaria.didRecorder.SpringControllers;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,9 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import si.f5.stsaria.didRecorder.RealNames;
-import si.f5.stsaria.didRecorder.Recorders;
-import si.f5.stsaria.didRecorder.Users;
+import si.f5.stsaria.didRecorder.RecordFileControllers.FileLocks;
+import si.f5.stsaria.didRecorder.RecordFileControllers.UserFC;
+import si.f5.stsaria.didRecorder.Recorders.DidR;
+import si.f5.stsaria.didRecorder.Recorders.RealNameR;
+import si.f5.stsaria.didRecorder.Recorders.UserR;
+import si.f5.stsaria.didRecorder.Records.User;
 import si.f5.stsaria.didRecorder.checker.Login;
 
 import java.nio.charset.StandardCharsets;
@@ -33,10 +36,10 @@ public class AdminController {
         String[] latestDidsS = new String[typeLength];
         String[] oneGapLatestDidsS = new String[typeLength];
         try {
-            synchronized (Recorders.lock) {
+            synchronized (FileLocks.did) {
                 for (int i = 0; i < typeLength; i++){
-                    latestDidsS[i] = Recorders.getLatestLog(0, i);
-                    oneGapLatestDidsS[i] = Recorders.getLatestLog(1, i);
+                    latestDidsS[i] = new DidR().getLatestAllLog(0, i);
+                    oneGapLatestDidsS[i] = new DidR().getLatestAllLog(1, i);
                 }
             }
         } catch (Exception ignore){}
@@ -60,10 +63,10 @@ public class AdminController {
         mav.setViewName("redirect:/");
         if (!Login.adminLoginChecker(token)) return mav;
         mav.setViewName("admin/setRealName");
-        ArrayList<String[]> users = new ArrayList<>(List.of());
+        ArrayList<User> users = new ArrayList<>(List.of());
         try{
-            synchronized (Users.lock) {
-                users = new Users().getFormatedUsers();
+            synchronized (FileLocks.user) {
+                users = UserFC.records();
             }
         } catch (Exception ignore) {}
         mav.addObject("users", users);
@@ -71,12 +74,19 @@ public class AdminController {
         return mav;
     }
     @RequestMapping(path = "/admin/setRealName", method= RequestMethod.POST)
-    public String setRealName(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("id") String id, @RequestParam("name") String name) {
+    public String setRealName(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("userId") String userId, @RequestParam("name") String name) {
         if (!Login.adminLoginChecker(token)) return "redirect:/";
         int result;
+        User user;
         try{
-            synchronized (Users.lock) {
-                result = new RealNames().add(id, name);
+            synchronized (FileLocks.user) {
+                if (!new UserR().exists(userId)){
+                    return "redirect:/admin/setRealName?result=1";
+                }
+                user = new UserR().getUser(userId);
+            }
+            synchronized (FileLocks.realName) {
+                result = new RealNameR().add(user, name);
             }
         } catch (Exception ignore) {
             result = -1;
@@ -92,9 +102,9 @@ public class AdminController {
         int typeLength = 2;
         String[] didsS = new String[typeLength];
         try {
-            synchronized (Recorders.lock) {
+            synchronized (FileLocks.did) {
                 for (int i = 0; i < typeLength; i++){
-                    didsS[i] = Recorders.getLatestLog(Integer.parseInt(gap), i);
+                    didsS[i] = new DidR().getLatestAllLog(Integer.parseInt(gap), i);
                 }
             }
         } catch (Exception ignore){}
@@ -108,8 +118,8 @@ public class AdminController {
         try {Integer.valueOf(gap);} catch (NumberFormatException ignore) {gap = "0";}
         String didsStr = "";
         try{
-            synchronized (Recorders.lock){
-                didsStr = Recorders.getLatestLog(Integer.parseInt(gap), 0);
+            synchronized (FileLocks.did){
+                didsStr = new DidR().getLatestAllLog(Integer.parseInt(gap), 0);
             }
         } catch (Exception ignore) {}
         byte[] didsBytes = didsStr.getBytes(StandardCharsets.UTF_8);
@@ -124,8 +134,8 @@ public class AdminController {
         try {Integer.valueOf(gap);} catch (NumberFormatException ignore) {gap = "0";}
         String didsStr = "";
         try{
-            synchronized (Recorders.lock){
-                didsStr = Recorders.getLatestLog(Integer.parseInt(gap), 1);
+            synchronized (FileLocks.did){
+                didsStr = new DidR().getLatestAllLog(Integer.parseInt(gap), 1);
             }
         } catch (Exception ignore) {}
         byte[] didsBytes = didsStr.getBytes(StandardCharsets.UTF_8);

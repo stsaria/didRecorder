@@ -1,4 +1,4 @@
-package si.f5.stsaria.didRecorder.controller;
+package si.f5.stsaria.didRecorder.SpringControllers;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -6,9 +6,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import si.f5.stsaria.didRecorder.DidRecorderApplication;
-import si.f5.stsaria.didRecorder.Recorder;
+import si.f5.stsaria.didRecorder.RecordFileControllers.FileLocks;
+import si.f5.stsaria.didRecorder.Recorders.DidR;
+import si.f5.stsaria.didRecorder.Recorders.UserR;
+import si.f5.stsaria.didRecorder.Records.User;
 import si.f5.stsaria.didRecorder.TimeUtils;
-import si.f5.stsaria.didRecorder.Users;
 import si.f5.stsaria.didRecorder.checker.Login;
 
 import java.util.Objects;
@@ -18,6 +20,8 @@ public class RecordFormController {
     private final static String hMRegex = "([01]?[0-9]|2[0-3]):([0-5][0-9])";
     @RequestMapping(path = "/", method=RequestMethod.GET)
     public ModelAndView index(@CookieValue(name = "token", defaultValue = "", required = false) String token, @CookieValue(name = "result", defaultValue = "", required = false) String resultC, @RequestParam(value = "result", defaultValue = "-22", required = false) String result, ModelAndView mav, HttpServletResponse hsr) {
+        mav.setViewName("redirect:/login");
+        if (!Login.loginChecker(token)) return mav;
         try {Integer.valueOf(result);} catch (NumberFormatException ignore) {result = "-22";}
         if (!Objects.equals(result, "-22")){
             mav.setViewName("redirect:/");
@@ -25,26 +29,26 @@ public class RecordFormController {
             hsr.addCookie(resultCookieN);
             return mav;
         }
+        mav.setViewName("index");
         Cookie resultCookieN = new Cookie("result", "-22");
         hsr.addCookie(resultCookieN);
         result = resultC;
         try {Integer.valueOf(result);} catch (NumberFormatException ignore) {result = "-22";}
-        String when = "";
+        int when = 4;
         String log = "";
-        mav.setViewName("redirect:/login");
-        if (!Login.loginChecker(token)){
-            return mav;
-        }
         try {
-            synchronized (Users.lock) {
-                Recorder recorder = new Recorder(token.split("\\.")[0]);
-                when = recorder.nextWhen();
-                log = recorder.getLatestLog(0);
+            User user;
+            synchronized (FileLocks.user) {
+                user = new UserR().getUser(token.split("-")[0]);
+            }
+            synchronized (FileLocks.did) {
+                DidR didR = new DidR();
+                when = didR.nextWhen(user);
+                log = didR.getLatestUserLog(user, 0);
             }
         } catch (Exception ignore) {
             result = "-1";
         }
-        mav.setViewName("index");
         mav.addObject("minTime", DidRecorderApplication.properties.getPropertyInt("minTimeHours")+":00");
         mav.addObject("maxTime", DidRecorderApplication.properties.getPropertyInt("maxTimeHours")+":00");
         mav.addObject("result", Integer.valueOf(result));
@@ -61,10 +65,13 @@ public class RecordFormController {
             return "redirect:/?result=-2";
         }
         time = String.valueOf(TimeUtils.hMTimeToUnixTime(time));
-        Recorder recorder = new Recorder(token.split("\\.")[0]);
         int result;
         try{
-            result = recorder.add("0", time);
+            User user;
+            synchronized (FileLocks.user) {
+                user = new UserR().getUser(token.split("-")[0]);
+            }
+            result = new DidR().add(user, "0", time);
         } catch (Exception ignore) {
             result = -1;
         }
@@ -75,10 +82,13 @@ public class RecordFormController {
         if (!Login.loginChecker(token)){
             return "redirect:/login";
         }
-        Recorder recorder = new Recorder(token.split("\\.")[0]);
         int result;
         try{
-            result = recorder.add("1", content);
+            User user;
+            synchronized (FileLocks.user) {
+                user = new UserR().getUser(token.split("-")[0]);
+            }
+            result = new DidR().add(user, "1", content);
         } catch (Exception ignore) {
             result = -1;
         }
@@ -89,10 +99,13 @@ public class RecordFormController {
         if (!Login.loginChecker(token)){
             return "redirect:/login";
         }
-        Recorder recorder = new Recorder(token.split("\\.")[0]);
         int result;
         try{
-            result = recorder.add("2", content);
+            User user;
+            synchronized (FileLocks.user) {
+                user = new UserR().getUser(token.split("-")[0]);
+            }
+            result = new DidR().add(user, "2", content);
         } catch (Exception ignore) {
             result = -1;
         }
@@ -107,10 +120,13 @@ public class RecordFormController {
             return "redirect:/?result=-2";
         }
         time = String.valueOf(TimeUtils.hMTimeToUnixTime(time));
-        Recorder recorder = new Recorder(token.split("\\.")[0]);
         int result;
         try{
-            result = recorder.add("3", time);
+            User user;
+            synchronized (FileLocks.user) {
+                user = new UserR().getUser(token.split("-")[0]);
+            }
+            result = new DidR().add(user, "3", time);
         } catch (Exception ignore) {
             result = -1;
         }
@@ -118,15 +134,7 @@ public class RecordFormController {
     }
     @RequestMapping(path = "/record/all", method=RequestMethod.POST)
     public String recordAll(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam("comeTime") String comeTime, @RequestParam("amContent") String amContent, @RequestParam("pmContent") String pmContent, @RequestParam("goTime") String goTime) {
-        boolean loggedIn = false;
-        try {
-            synchronized (Users.lock) {
-                if (new Users().authForToken(token)) loggedIn = true;
-            }
-        } catch (Exception ignore) {}
-        if (!loggedIn){
-            return "redirect:/login";
-        }
+        if (!Login.loginChecker(token)) return "redirect:/login";
         String hMRegex = "([01]?[0-9]|2[0-3]):([0-5][0-9])";
         if (!(comeTime.matches(hMRegex) || goTime.matches(hMRegex))){
             return "redirect:/?result=-2";
@@ -136,14 +144,19 @@ public class RecordFormController {
             times[i] = String.valueOf(TimeUtils.hMTimeToUnixTime(times[i]));
         }
         String[] contents = {times[0], amContent, pmContent, times[1]};
-        Recorder recorder = new Recorder(token.split("\\.")[0]);
-        int resultT;
         int result = -22;
+        User user;
+        try{
+            synchronized (FileLocks.user) {
+                user = new UserR().getUser(token.split("-")[0]);
+            }
+        } catch (Exception ignore) {
+            return "redirect:/?result=-1";
+        }
         for (int i = 0; i < contents.length; i++){
             try{
-                resultT = recorder.add(String.valueOf(i), contents[i]);
-                result = resultT;
-                if (resultT != 0) break;
+                result = new DidR().add(user, String.valueOf(i), contents[i]);
+                if (result != 0) break;
             } catch (Exception ignore) {
                 result = -1;
                 break;

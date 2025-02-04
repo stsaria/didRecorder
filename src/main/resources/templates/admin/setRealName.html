@@ -25,9 +25,9 @@
             </div>
             <form method="post">
                 <div class="mb-3">
-                    <select class="form-select" name="id" required>
+                    <select class="form-select" name="userId" required>
                         <option disabled selected value="">ユーザー選択</option>
-                        <option th:each="user : ${users}" th:value="${user[0]}" th:text="${user[1]}"></option>
+                        <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.name}"></option>
                     </select>
                 </div>
                 <div class="mb-3">

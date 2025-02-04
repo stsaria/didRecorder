@@ -1,26 +1,28 @@
 package si.f5.stsaria.didRecorder.checker;
 
-import si.f5.stsaria.didRecorder.Users;
+import si.f5.stsaria.didRecorder.RecordFileControllers.FileLocks;
+import si.f5.stsaria.didRecorder.Recorders.UserR;
+import si.f5.stsaria.didRecorder.Records.User;
 
 public class Login {
     public static boolean loginChecker(String token) {
-        boolean loggedIn = false;
         try {
-            synchronized (Users.lock) {
-                if (new Users().authForToken(token)) {
-                    loggedIn = true;
+            synchronized (FileLocks.user) {
+                if (new UserR().authForToken(token)) {
+                    return true;
                 }
             }
         } catch (Exception ignore) {}
-        return loggedIn;
+        return false;
     }
     public static boolean adminLoginChecker(String token) {
         if (!loginChecker(token)) return false;
         try {
-            synchronized (Users.lock) {
-                if (!new Users().isAdmin(token.split("\\.")[0])) return false;
+            synchronized (FileLocks.user) {
+                User user = new UserR().getUser(token.split("-")[0]);
+                if (user.type.equals("admin")) return true;
             }
         } catch (Exception ignore){}
-        return true;
+        return false;
     }
 }

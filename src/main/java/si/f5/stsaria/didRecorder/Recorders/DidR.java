@@ -102,7 +102,7 @@ public class DidR {
                             .append(",")
                             .append(new RealNameR().existsUser(did.user) ?
                                 new RealNameR().getRealName(did.user).name
-                                : did.user.name)
+                            : did.user.name)
                             .append(",")
                             .append(StringUtils.replaceEach(
                                     String.valueOf(did.type),
@@ -121,8 +121,8 @@ public class DidR {
                         if (!foundUserIds.contains(did.user.id)){
                             log.append(did.type == 0 ?
                                 new RealNameR().existsUser(did.user) ?
-                                    did.user.name
-                                : new RealNameR().getRealName(did.user).name
+                                    new RealNameR().getRealName(did.user).name
+                                : did.user.name
                             : "").append(",").append(TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo"));
                             foundUserIds.add(did.user.id);
                         }

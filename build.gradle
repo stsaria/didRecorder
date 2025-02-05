@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'si.f5.stsaria'
-version = 'beta-1.2'
+version = 'beta-1.21'
 
 java {
 	toolchain {

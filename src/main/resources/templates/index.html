@@ -27,9 +27,13 @@
                 <p th:case ==6 class="text-danger">今日の記録はすべて終了しています。</p>
                 <p th:case ==7 class="text-danger">既に後の記録をしているのに、それよりも前の記録または、同じ記録をしようとしています。（例：午後の記録を完了しているのに、出席を出す）</p>
             </div>
-            <div>
+            <div class="mb-2">
                 <h3>Functions</h3>
                 <a href="comeTimeChart"><button class="btn btn-secondary">到着時間棒グラフ(謎機能)</button></a>
+            </div>
+            <div class="mb-2">
+                <h3>Info</h3>
+                <p>今日は<span th:text="${comeCount}"></span>人来ました。</p>
             </div>
             <hr>
             <div class="nextRecord">
@@ -110,7 +114,7 @@
             </div>
             <hr>
             <div>
-                <h3>15時間以内の記録(自分)</h3>
+                <h3>今日の記録(自分)</h3>
                 <pre th:text="${log}"></pre>
             </div>
             <hr>

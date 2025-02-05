@@ -158,10 +158,21 @@ public class DidR {
                             TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo")
                         : did.contentString)
                         .append("\n\n");
+                    break;
                 case 1:
                     log.append(did.type == 0 ? TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo")+"\n" : "");
+                    break;
             }
         }
         return log.toString();
+    }
+    public int countLatestComeUser(int gap) throws IOException {
+        int count = 0;
+        synchronized (FileLocks.user){
+            for (Did did : this.lastUpdateDids(gap)){
+                if (did.type == 0) count++;
+            }
+        }
+        return count;
     }
 }

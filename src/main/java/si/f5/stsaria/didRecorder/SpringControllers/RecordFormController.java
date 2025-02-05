@@ -35,6 +35,7 @@ public class RecordFormController {
         hsr.addCookie(resultCookieN);
         result = resultC;
         try {Integer.valueOf(result);} catch (NumberFormatException ignore) {result = "-22";}
+        int comeUserCount = 0;
         int when = 4;
         String log = "";
         try {
@@ -46,6 +47,7 @@ public class RecordFormController {
                 DidR didR = new DidR();
                 when = didR.nextWhen(user);
                 log = didR.getLatestUserLog(user, 0, 0);
+                comeUserCount = didR.countLatestComeUser(0);
             }
         } catch (Exception ignore) {
             result = "-1";
@@ -55,6 +57,7 @@ public class RecordFormController {
         mav.addObject("result", Integer.valueOf(result));
         mav.addObject("when", when);
         mav.addObject("log", log);
+        mav.addObject("comeCount", comeUserCount);
         return mav;
     }
     @RequestMapping(path = "/record/0", method=RequestMethod.POST)

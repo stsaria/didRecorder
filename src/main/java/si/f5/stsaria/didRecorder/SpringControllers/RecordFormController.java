@@ -47,7 +47,7 @@ public class RecordFormController {
                 DidR didR = new DidR();
                 when = didR.nextWhen(user);
                 log = didR.getLatestUserLog(user, 0, 0);
-                comeUserCount = didR.countLatestComeUser(0);
+                comeUserCount = didR.countLatestComeUser(0, true);
             }
         } catch (Exception ignore) {
             result = "-1";

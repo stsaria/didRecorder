@@ -172,10 +172,16 @@ public class DidR {
         }
         return log.toString();
     }
-    public int countLatestComeUser(int gap) throws IOException {
+    public int countLatestComeUser(int gap, boolean requiredJudgeDay) throws IOException {
         int count = 0;
         synchronized (FileLocks.user){
-            for (Did did : this.lastUpdateDids(gap)){
+            for (Did did : this.lastUpdateDids(gap).reversed()){
+                if (requiredJudgeDay && !(Math.abs(did.makeUnixTime - this.nowUnixTime) < (gap == 0 ?
+                        DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")
+                        : DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")*(long) gap)))
+                {
+                    break;
+                }
                 if (did.type == 0) count++;
             }
         }

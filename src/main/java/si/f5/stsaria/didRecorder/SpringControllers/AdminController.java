@@ -38,8 +38,8 @@ public class AdminController {
         try {
             synchronized (FileLocks.did) {
                 for (int i = 0; i < typeLength; i++){
-                    latestDidsS[i] = new DidR().getLatestAllLog(0, i);
-                    oneGapLatestDidsS[i] = new DidR().getLatestAllLog(1, i);
+                    latestDidsS[i] = new DidR().getLatestAllLog(0, i, false);
+                    oneGapLatestDidsS[i] = new DidR().getLatestAllLog(1, i, false);
                 }
             }
         } catch (Exception ignore){}
@@ -104,7 +104,7 @@ public class AdminController {
         try {
             synchronized (FileLocks.did) {
                 for (int i = 0; i < typeLength; i++){
-                    didsS[i] = new DidR().getLatestAllLog(Integer.parseInt(gap), i);
+                    didsS[i] = new DidR().getLatestAllLog(Integer.parseInt(gap), i, false);
                 }
             }
         } catch (Exception ignore){}
@@ -119,7 +119,7 @@ public class AdminController {
         String didsStr = "";
         try{
             synchronized (FileLocks.did){
-                didsStr = new DidR().getLatestAllLog(Integer.parseInt(gap), 0);
+                didsStr = new DidR().getLatestAllLog(Integer.parseInt(gap), 0, false);
             }
         } catch (Exception ignore) {}
         byte[] didsBytes = didsStr.getBytes(StandardCharsets.UTF_8);
@@ -135,7 +135,7 @@ public class AdminController {
         String didsStr = "";
         try{
             synchronized (FileLocks.did){
-                didsStr = new DidR().getLatestAllLog(Integer.parseInt(gap), 1);
+                didsStr = new DidR().getLatestAllLog(Integer.parseInt(gap), 1, false);
             }
         } catch (Exception ignore) {}
         byte[] didsBytes = didsStr.getBytes(StandardCharsets.UTF_8);

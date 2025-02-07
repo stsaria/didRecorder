@@ -93,24 +93,53 @@ public class AdminController {
         }
         return "redirect:/admin/setRealName?result="+result;
     }
-    @RequestMapping(path = "/admin/selectGapDidsS", method= RequestMethod.GET)
+    @RequestMapping(path = "/admin/allDidsS", method= RequestMethod.GET)
+    public ModelAndView allDidsS(@CookieValue(name = "token", defaultValue = "", required = false) String token, ModelAndView mav) {
+        mav.setViewName("redirect:/");
+        if (!Login.adminLoginChecker(token)) return mav;
+        mav.setViewName("admin/allDidsS");
+        String didsS = "";
+        try {
+            synchronized (FileLocks.did) {
+                didsS = new DidR().getAllAllLog(0);
+            }
+        } catch (Exception ignore){}
+        mav.addObject("didsS", didsS);
+        return mav;
+    }
+    @RequestMapping(path = "/admin/selectGapDids", method= RequestMethod.GET)
     public ModelAndView selectGapDids(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam(value = "gap", defaultValue = "0", required = false) String gap, ModelAndView mav) {
         try {Integer.valueOf(gap);} catch (NumberFormatException ignore) {gap = "0";}
         mav.setViewName("redirect:/");
         if (!Login.adminLoginChecker(token)) return mav;
-        mav.setViewName("admin/selectGapDidsS");
+        mav.setViewName("admin/selectGapDids");
         int typeLength = 2;
-        String[] didsS = new String[typeLength];
+        String[] dids = new String[typeLength];
         try {
             synchronized (FileLocks.did) {
                 for (int i = 0; i < typeLength; i++){
-                    didsS[i] = new DidR().getLatestAllLog(Integer.parseInt(gap), i, false);
+                    dids[i] = new DidR().getLatestAllLog(Integer.parseInt(gap), i, false);
                 }
             }
         } catch (Exception ignore){}
-        mav.addObject("didsS", didsS);
+        mav.addObject("dids", dids);
         mav.addObject("gap", gap);
         return mav;
+    }
+    @RequestMapping(path = "/admin/download/all/all/csv", method= RequestMethod.GET)
+    public ResponseEntity<byte[]> downloadAllAllCsv(@CookieValue(name = "token", defaultValue = "", required = false) String token) {
+        if (!Login.adminLoginChecker(token)) return ResponseEntity.status(HttpStatus.FOUND).header(HttpHeaders.LOCATION, "/").build();
+        String didsSStr = "";
+        try{
+            synchronized (FileLocks.did){
+                didsSStr = new DidR().getAllAllLog(0);
+            }
+        } catch (Exception ignore) {}
+        byte[] didsSBytes = didsSStr.getBytes(StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"allAll.csv\"");
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        return new ResponseEntity<>(didsSBytes, headers, HttpStatus.OK);
     }
     @RequestMapping(path = "/admin/download/today/all/csv", method= RequestMethod.GET)
     public ResponseEntity<byte[]> downloadTodayAllCsv(@CookieValue(name = "token", defaultValue = "", required = false) String token, @RequestParam(value = "gap", defaultValue = "0", required = false) String gap) {

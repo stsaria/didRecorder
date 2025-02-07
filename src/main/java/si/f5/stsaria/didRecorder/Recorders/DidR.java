@@ -90,6 +90,50 @@ public class DidR {
             return canAddResult;
         }
     }
+    public String getAllAllLog(int type) throws IOException {
+        StringBuilder log = new StringBuilder();
+        ArrayList<String> foundUserIds = new ArrayList<>();
+        synchronized (FileLocks.user) {
+            for (ArrayList<Did> dids : DidFC.recordsS().reversed()) {
+                for (Did did : dids) {
+                    switch (type) {
+                        case 0:
+                            log
+                                .append(TimeUtils.unixTimeToYMDHM(did.makeUnixTime, "Asia/Tokyo"))
+                                .append(",")
+                                .append(new RealNameR().existsUser(did.user) ?
+                                    new RealNameR().getRealName(did.user).name
+                                    : did.user.name)
+                                .append(",")
+                                .append(StringUtils.replaceEach(
+                                        String.valueOf(did.type),
+                                        new String[]{"0", "1", "2", "3"},
+                                        new String[]{"到着", "午前の記録", "午後の記録", "出発"}
+                                    )
+                                )
+                                .append(",")
+                                .append(String.valueOf(did.type).matches("[03]") ?
+                                    TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo")
+                                    : did.contentString.replace("\n", " ")
+                                )
+                                .append("\n");
+                            break;
+                        case 1:
+                            if (!foundUserIds.contains(did.user.id) && did.type == 0) {
+                                log.append(new RealNameR().existsUser(did.user) ?
+                                                new RealNameR().getRealName(did.user).name
+                                            : did.user.name)
+                                .append(",").append(TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo")).append("\n");
+                                foundUserIds.add(did.user.id);
+                            }
+                            break;
+                    }
+                }
+                log.append("\n");
+            }
+        }
+        return log.toString();
+    }
     public String getLatestAllLog(int gap, int type, boolean requiredJudgeDay) throws IOException {
         StringBuilder log = new StringBuilder();
         ArrayList<String> foundUserIds = new ArrayList<>();
@@ -137,6 +181,38 @@ public class DidR {
         }
         return log.toString();
     }
+    public String getAllUserLog(User user, int type) throws IOException {
+        StringBuilder log = new StringBuilder();
+        for (ArrayList<Did> dids : DidFC.recordsS().reversed()){
+            for (Did did : dids) {
+                if (!did.user.id.equals(user.id)) {
+                    continue;
+                }
+                switch (type) {
+                    case 0:
+                        log
+                            .append(TimeUtils.unixTimeToYMDHM(did.makeUnixTime, "Asia/Tokyo"))
+                            .append("\n")
+                            .append(StringUtils.replaceEach(
+                                    String.valueOf(did.type),
+                                    new String[]{"0", "1", "2", "3"},
+                                    new String[]{"到着", "午前の記録", "午後の記録", "出発"}
+                                )
+                            )
+                            .append("\n内容:")
+                            .append(String.valueOf(did.type).matches("[03]") ?
+                                        TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo")
+                                    : did.contentString)
+                            .append("\n\n");
+                        break;
+                    case 1:
+                        log.append(did.type == 0 ? TimeUtils.unixTimeToHM(did.contentUnixTime, "Asia/Tokyo") + "\n" : "");
+                        break;
+                }
+            }
+        }
+        return log.toString();
+    }
     public String getLatestUserLog(User user, int gap, int type) throws IOException {
         StringBuilder log = new StringBuilder();
         for (Did did : this.lastUpdateDids(gap).reversed()){
@@ -151,7 +227,7 @@ public class DidR {
             switch (type) {
                 case 0:
                     log
-                        .append(TimeUtils.unixTimeToHM(did.makeUnixTime, "Asia/Tokyo"))
+                        .append(TimeUtils.unixTimeToYMDHM(did.makeUnixTime, "Asia/Tokyo"))
                         .append("\n")
                         .append(StringUtils.replaceEach(
                                 String.valueOf(did.type),

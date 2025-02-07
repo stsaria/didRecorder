@@ -181,7 +181,7 @@ public class RecordFormController {
             }
             synchronized (FileLocks.did) {
                 DidR didR = new DidR();
-                comeHMs = didR.getLatestUserLog(user, 0, 1).split("\n");
+                comeHMs = didR.getAllUserLog(user, 1).split("\n");
             }
         } catch (Exception ignore) {
             return mav;

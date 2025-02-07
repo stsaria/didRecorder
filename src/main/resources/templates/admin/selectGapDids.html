@@ -29,12 +29,12 @@
                 <div>
                     <h6>出席者(フォーマット:ユーザーIDまたは本名,出席時間)</h6>
                     <a th:href="'download/today/attendees/csv?gap='+${gap}">ダウンロード(csv)</a>
-                    <pre th:text="${didsS[1]}">出席者</pre>
+                    <pre th:text="${dids[1]}">出席者</pre>
                 </div>
                 <div>
                     <h6>すべて(フォーマット:登録時間,ユーザーIDまたは本名,ログのタイプ,内容)</h6>
                     <a th:href="'download/today/all/csv?gap='+${gap}">ダウンロード(csv)</a>
-                    <pre th:text="${didsS[0]}">すべて</pre>
+                    <pre th:text="${dids[0]}">すべて</pre>
                 </div>
             </div>
             <p class="text-warning">もし1日前記録されて、0日前（例えば今日）には記録していない場合は、1日前の記録が0日前の記録として載ります。（これは、2日前からでも一緒です）土曜日などで空いた場合は、ログの日付から確認してください。</p>

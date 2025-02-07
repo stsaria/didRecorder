@@ -90,11 +90,17 @@ public class DidR {
             return canAddResult;
         }
     }
-    public String getLatestAllLog(int gap, int type) throws IOException {
+    public String getLatestAllLog(int gap, int type, boolean requiredJudgeDay) throws IOException {
         StringBuilder log = new StringBuilder();
         ArrayList<String> foundUserIds = new ArrayList<>();
         synchronized (FileLocks.user) {
-            for (Did did : this.lastUpdateDids(gap)) {
+            for (Did did : this.lastUpdateDids(gap).reversed()) {
+                if (requiredJudgeDay && !(Math.abs(did.makeUnixTime - this.nowUnixTime) < (gap == 0 ?
+                    DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")
+                    : DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")*(long) gap)))
+                {
+                    break;
+                }
                 switch (type) {
                     case 0:
                         log
@@ -133,7 +139,7 @@ public class DidR {
     }
     public String getLatestUserLog(User user, int gap, int type) throws IOException {
         StringBuilder log = new StringBuilder();
-        for (Did did : this.lastUpdateDids(gap)){
+        for (Did did : this.lastUpdateDids(gap).reversed()){
             if (!(Math.abs(did.makeUnixTime - this.nowUnixTime) < (gap == 0 ?
                 DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")
                 : DidRecorderApplication.properties.getPropertyInt("dayChangeThresholdSeconds")*(long) gap)))
